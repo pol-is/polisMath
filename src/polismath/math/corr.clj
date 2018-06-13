@@ -12,7 +12,7 @@
     ;[polismath.utils :as utils]
     ;[polismath.math.stats :as stats]
     [polismath.math.named-matrix :as nm]
-    [clojure.spec :as s]
+    [clojure.spec.alpha :as s]
     [clojure.core.matrix :as matrix]
     ;[clojure.core.matrix.stats :as matrix-stats]
     [clojure.core.matrix.selection :as matrix.selection]
@@ -146,6 +146,21 @@
           (update :center (partial into []))))
     clusters))
 
+
+(defn default-tids
+  ;; Gonna need to get all of this under group clusters vs subgroups
+  [{:as conv :keys [repness consensus group-clusters rating-mat pca]}]
+  (let [{:keys [extremity]} pca
+        {:keys [agree disagree]} consensus]
+    (set
+      (concat
+        (map :tid (concat agree disagree))
+        (mapcat
+          (fn [[gid gid-repness]]
+            (map :tid gid-repness))
+          repness)))))
+
+
 (defn compute-corr
   ([conv tids]
    (let [matrix (:rating-mat conv)
@@ -161,7 +176,7 @@
                                          matrix/rows))]
      corr-mat'))
   ([conv]
-   (compute-corr conv nil)))
+   (compute-corr conv (default-tids conv))))
 
 
 (defn spit-json
