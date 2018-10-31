@@ -1,0 +1,2 @@
+./setEnvVars
+lein run full
