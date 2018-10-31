@@ -1,2 +1,2 @@
-./setEnvVars
+source ./setEnvVars
 lein run full
