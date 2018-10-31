@@ -332,6 +332,18 @@
   (priority-metric false 18 3 20 1)
   :end-comment)
 
+(defn with-proj-and-extremtiy
+  "Compute projection and extremity and merge in to pca results"
+  [pca]
+  (let [cmnt-proj (pca/pca-project-cmnts pca)
+        cmnt-extremity
+        (mapv
+          (fn [row]
+            (matrix/length row))
+          (matrix/rows cmnt-proj))]
+    (assoc pca
+           :comment-projection (matrix/transpose cmnt-proj)
+           :comment-extremity cmnt-extremity)))
   
 (def small-conv-update-graph
   "For computing small conversation updates (those without need for base clustering)"
@@ -365,16 +377,8 @@
                    (pca/wrapped-pca mat
                                     (:n-comps opts')
                                     :start-vectors (get-in conv [:pca :comps])
-                                    :iters (:pca-iters opts'))
-                   cmnt-proj (pca/pca-project-cmnts pca)
-                   cmnt-extremity
-                   (mapv
-                     (fn [row]
-                       (matrix/length row))
-                     (matrix/rows cmnt-proj))]
-               (assoc pca
-                      :comment-projection (matrix/transpose cmnt-proj)
-                      :comment-extremity cmnt-extremity)))
+                                    :iters (:pca-iters opts'))]
+               (with-proj-and-extremtiy pca)))
 
 
       :proj
@@ -650,7 +654,11 @@
                             data)))
                       {:A 0 :D 0 :S 0 :P 0}
                       group-votes)
-                    extremity (get extremities tid)]
+                    extremity (or (get extremities tid)
+                                  (do
+                                    (log/warn "No extremity for tid" tid "zid" (:zid conv))
+                                    ;; Default to 0 just in case, but this shouldn't happen (bugfix)
+                                    0))]
                 (priority-metric (meta-tids tid) A P S extremity)))
             tids)))
 
@@ -735,8 +743,10 @@
                 (let [rand-indices (take sample-size (sampling/sample (range n-ptpts) :generator :twister))
                       pca          ((partial-pca mat pca rand-indices) pca)]
                   (if (= iter 0)
-                    (recur pca (dec iter))
-                    pca)))))}))
+                    ;; Then done, but don't forget to merge in the comment extremtiy, etc
+                    (with-proj-and-extremtiy pca)
+                    ;; Recur
+                    (recur pca (dec iter)))))))}))
 
 
 (def eager-profiled-compiler
@@ -869,14 +879,22 @@
   (ipv-print-method o w))
 
 
+(defn misc-reader [type]
+ (fn [& args]
+   {:type type
+    :args args}))
+
 ; a reader that uses these custom printing formats
 (defn read-vectorz-edn [text]
   (edn/read-string
     {:readers {'mikera.vectorz.Vector matrix/matrix
                'mikera.arrayz.NDArray matrix/matrix
                'mikera.matrixx.Matrix matrix/matrix
-               'polismath.named-matrix.NamedMatrix nm/named-matrix-reader}}
+               'polismath.named-matrix.NamedMatrix nm/named-matrix-reader
+               'object (misc-reader :object)
+               'error (misc-reader :error)}}
     text))
+
 
 
 (defn conv-update-dump
