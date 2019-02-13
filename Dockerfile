@@ -1,4 +1,4 @@
-from alpine:edge
+from alpine:latest
 
 ENV BUILD_DEPS="bash build-base libpng-dev zlib-dev autoconf automake libtool nasm curl" \
     RUN_DEPS="openssh-client openjdk8-jre" \
@@ -10,10 +10,8 @@ COPY . .
 RUN \
   apk update && \
   apk add $RUN_DEPS $BUILD_DEPS && \
-
   curl --silent https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > /usr/local/bin/lein && \
   chmod +x /usr/local/bin/lein && \
-
   lein deps
 
   # Not doing this for now, since conflicts with core.matrix for some reason...
@@ -25,4 +23,4 @@ RUN \
   #apk del $BUILD_DEPS && \
   #rm -rf /tmp/* /var/cache/*
 
-ENTRYPOINT ["./bin/run"]
+ENTRYPOINT ["./bin/dockerRun"]

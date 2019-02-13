@@ -1,4 +1,4 @@
-;; Copyright (C) 2012-present, Polis Technology Inc. This program is free software: you can redistribute it and/or  modify it under the terms of the GNU Affero General Public License, version 3, as published by the Free Software Foundation. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; Copyright (C) 2012-present, The Authors. This program is free software: you can redistribute it and/or  modify it under the terms of the GNU Affero General Public License, version 3, as published by the Free Software Foundation. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (ns polismath.components.config
   (:require [polismath.utils :as utils]
@@ -24,6 +24,11 @@
   ;; Otherwise want to return nil, so merging works
   (when (and x (not (= x "")))
     (keyword x)))
+
+(defn ->boolean [x]
+  (when x
+    ;; anything other than these values will be considered truthy
+    (not (#{"false" "0" "no"} x))))
 
 
 ;; XXX This should be computed; that is be a function of the rules.
@@ -56,7 +61,7 @@
    :database-url               {:path [:database :url]}
    :database-for-reads-name    {:path [:database :reads-name]}
    :database-pool-size         {:path [:database :pool-size] :parse ->long}
-   :mongolab-uri               {:path [:mongo :url]}
+   :database-ignore-ssl        {:path [:database :ignore-ssl] :parse ->boolean}
    :mailgun-api-key            {:path [:email :api-key]}
    :mailgun-url                {:path [:email :url]}
    :aws-secret-key             {:path [:aws :secret-key]}
@@ -91,7 +96,7 @@
    ;                             :doc "The initial vote and mod polling timestamp (only load convs with votes later than this)"}
    :poll-from-days-ago         {:parse ->long :path [:poller :poll-from-days-ago]}
    ;; Need to think more about the semantics of a recompute; once; always; only if not booted; etc? XXX
-   :recompute                  {:parse boolean
+   :recompute                  {:parse ->boolean
                                 :doc "Whether or not to perform a recompute"}
    ;; Need to think about how to handle options
    :logging-level              {:path [:logging :level] :parse ->keyword
