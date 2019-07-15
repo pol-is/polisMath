@@ -1,4 +1,3 @@
 # Rename this file to setEnvVars and fill in parameters
 export MATH_ENV=prod|preprod|dev
-export SERVER_PORT=<polisServerPort>
 export DATABASE_URL=postgres://<user>:<password>@localhost:5432/<dbname>?ssl=false

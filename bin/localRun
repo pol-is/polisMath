@@ -1,2 +1,2 @@
 source ./setEnvVars
-lein run full
+lein trampoline run full &
