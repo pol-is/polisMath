@@ -5,7 +5,8 @@ ENV BUILD_DEPS="bash build-base libpng-dev zlib-dev autoconf automake libtool na
     LEIN_ROOT=1
 
 WORKDIR /build
-COPY . .
+
+COPY project.clj .
 
 RUN \
   apk update && \
@@ -13,6 +14,8 @@ RUN \
   curl --silent https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein > /usr/local/bin/lein && \
   chmod +x /usr/local/bin/lein && \
   lein deps
+
+COPY . .
 
   # Not doing this for now, since conflicts with core.matrix for some reason...
   #lein package && \
